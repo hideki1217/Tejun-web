@@ -1,5 +1,4 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
@@ -39,4 +38,23 @@
 
 .read-the-docs {
   color: #888;
+}
+
+.window {
+  display: block;
+  width: 800px;
+  height: 600px;
+
+  background: #aaa;
+  position: relative;
+}
+
+.window .square-item {
+  background: rgba(255,0,0,0.6);
+  position: absolute;
+}
+
+.window .square-item:hover {
+  background: rgba(255,0,0,1.0);
+  position: absolute;
 }
