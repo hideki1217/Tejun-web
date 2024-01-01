@@ -58,3 +58,23 @@
   background: rgba(255,0,0,1.0);
   position: absolute;
 }
+
+.window .add-square {
+  height: 50px;
+  width: 50px;
+  margin: 5px;
+  border-radius: 99px;
+  background: #000;
+ 
+  font-size: 30px;
+  text-align: center;
+  
+  position: absolute;
+  z-index: 99;
+  right: 0px;
+}
+
+.window .add-square:hover {
+  background: #151515;
+  color: #7ef3b6;
+}
