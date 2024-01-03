@@ -49,16 +49,6 @@
   position: relative;
 }
 
-.window .item {
-  opacity: 0.9;
-
-  position: absolute;
-}
-
-.window .item:hover {
-  opacity: 1.0;
-}
-
 .window .tool-bar {
   width: 50px;
   padding: 5px;
