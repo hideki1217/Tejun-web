@@ -77,12 +77,7 @@ function App() {
 
   return (
     <>
-      <div className="window" onMouseUp={onMouseUp} onMouseMove={onMouseMove} onMouseDown={() => {
-        // console.log("window onMouseDown");
-        // if (!isPicked && focusedIndex != null) {
-        //   setFocusedIndex(undefined);
-        // }
-      }}>
+      <div className="window" onMouseUp={onMouseUp} onMouseMove={onMouseMove}>
         {items.map((item, index) => {
           switch (item.kind) {
             case 'square':
