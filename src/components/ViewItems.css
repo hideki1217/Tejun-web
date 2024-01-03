@@ -26,4 +26,11 @@
     .delete-button:hover {
         background-color: rgb(31, 31, 31);
     }
+
+    .item-border {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        z-index: 1;
+    }
 }
