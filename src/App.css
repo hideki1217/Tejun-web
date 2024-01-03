@@ -49,32 +49,41 @@
   position: relative;
 }
 
-.window .square-item {
-  background: rgba(255,0,0,0.6);
+.window .item {
+  opacity: 0.9;
+
   position: absolute;
 }
 
-.window .square-item:hover {
-  background: rgba(255,0,0,1.0);
-  position: absolute;
+.window .item:hover {
+  opacity: 1.0;
 }
 
-.window .add-square {
-  height: 50px;
+.window .tool-bar {
   width: 50px;
-  margin: 5px;
-  border-radius: 99px;
-  background: #000;
- 
-  font-size: 30px;
-  text-align: center;
-  
+  padding: 5px;
+
   position: absolute;
   z-index: 99;
   right: 0px;
 }
 
-.window .add-square:hover {
+.window .add-item {
+  height: 50px;
+  width: 50px;
+  border-radius: 99px;
+  background: #000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+ 
+  font-size: 30px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.window .add-item:hover {
   background: #151515;
   color: #7ef3b6;
 }

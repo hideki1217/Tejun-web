@@ -1,15 +1,11 @@
 import { useState } from 'react'
 import './App.css'
 import { Item } from './domain/entities';
-import { SquareItem } from './domain/square_item';
+import { Square, Circle } from './domain/view_items';
 
 
 function App() {
-  const [items, setItems] = useState<Item[]>([
-    new SquareItem(10, 10, 30, 30, "rgb(255,0,0)"),
-    new SquareItem(10, 45, 30, 30, "rgb(89, 0, 255)"),
-    new SquareItem(10, 80, 30, 30, "rgb(0, 255, 76)"),
-  ])
+  const [items, setItems] = useState<Item[]>([])
   const [focusedIndex, setFocusedIndex] = useState<number>();
 
   const onItemFocused = (index: number) => () => {
@@ -45,7 +41,10 @@ function App() {
   }
   const createRandomItem = (itemName: string) => {
     if (itemName == "square") {
-      return new SquareItem(10, uniform(10, 200), uniform(20, 100), uniform(20, 100), `rgb(${uniform(255)},${uniform(255)},${uniform(255)})`)
+      return new Square(10, uniform(10, 200), uniform(20, 100), uniform(20, 100), `rgb(${uniform(255)},${uniform(255)},${uniform(255)})`)
+    }
+    if (itemName == "circle") {
+      return new Circle(10, uniform(10, 200), uniform(20, 100), uniform(20, 100), `rgb(${uniform(255)},${uniform(255)},${uniform(255)})`)
     }
   }
   const onAddItem = (itemName: string) => {
@@ -63,7 +62,9 @@ function App() {
           });
         })}
         <div className='tool-bar'>
-          <div className='add-square' onClick={() => onAddItem("square")}>+</div>
+          <div className='add-item square' onClick={() => onAddItem("square")}>◻︎</div>
+          <div style={{height: '5px'}}/>
+          <div className='add-item circle' onClick={() => onAddItem("circle")}>○</div>
         </div>
       </div>
     </>
