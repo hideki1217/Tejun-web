@@ -9,7 +9,6 @@ type ViewBaseProps<T> = T & {
     onDelete?: () => void,
 };
 export const SquareView: React.FC<ViewBaseProps<Square>> = ({ width, height, left, top, fill, border, onMouseDown, onDelete, isFocused = false }) => {
-    const focusedBorderWidth = 1;
     const onMouseUpOnDelete = onDelete != null ? (e: React.MouseEvent) => {
         e.stopPropagation();
         onDelete();
@@ -20,29 +19,29 @@ export const SquareView: React.FC<ViewBaseProps<Square>> = ({ width, height, lef
             <div
                 className="item-container"
                 style={{
-                    width: `${width + (isFocused ? focusedBorderWidth * 2 : 0)}px`,
-                    height: `${height + (isFocused ? focusedBorderWidth * 2 : 0)}px`,
-                    left: `${left - (isFocused ? focusedBorderWidth : 0)}px`,
-                    top: `${top - (isFocused ? focusedBorderWidth : 0)}px`,
+                    width: `${width + (isFocused ? 2 : 0)}px`,
+                    height: `${height + (isFocused ? 2 : 0)}px`,
+                    left: `${left - (isFocused ? 1 : 0)}px`,
+                    top: `${top - (isFocused ? 1 : 0)}px`,
                 }}
             >
                 <div className="item square"
                     style={{
-                        width: "100%",
-                        height: "100%",
+                        margin: `${isFocused ? 1 : 0}px`,
+                        width: `${width}px`,
+                        height: `${height}px`,
                         background: fill ?? undefined,
                         border: border ?? undefined
                     }}
                     onMouseDown={onMouseDown}
                 >
                 </div>
+
                 {isFocused ?
                     <div className="delete-button" onMouseUp={onMouseUpOnDelete}>
                         <DeleteIcon size={12} fill="#fff" />
                     </div> : null}
-                {isFocused ?
-                    <div className="item-border"
-                        style={{ border: `dashed ${focusedBorderWidth}px black`, }} /> : null}
+                {isFocused ? <div className="item-border" /> : null}
             </div>
         </>
     );
@@ -68,8 +67,9 @@ export const CircleView: React.FC<ViewBaseProps<Circle>> = ({ width, height, lef
             >
                 <div className="item circle"
                     style={{
-                        width: "100%",
-                        height: "100%",
+                        margin: `${isFocused ? 1 : 0}px`,
+                        width: `${width}px`,
+                        height: `${height}px`,
                         borderRadius: '999px',
                         background: fill ?? undefined,
                         border: border ?? undefined
@@ -77,6 +77,7 @@ export const CircleView: React.FC<ViewBaseProps<Circle>> = ({ width, height, lef
                     onMouseDown={onMouseDown}
                 >
                 </div>
+
                 {isFocused ?
                     <div className="delete-button" onMouseUp={onMouseUpOnDelete}>
                         <DeleteIcon size={12} fill="#fff" />
