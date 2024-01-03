@@ -1,10 +1,19 @@
 import { Region } from "./math";
 
-export type ToElementParams = {
-    key: string,
-    onMouseDown?: (self: Item, e: React.MouseEvent<HTMLDivElement>) => void
+type Fillable = {
+    fill?: string
 }
 
-export type Item = Region & {
-    toElement: (props: ToElementParams) => React.ReactNode;
+type Bounded = {
+    border?: string
 }
+
+export type Square = Region & Fillable & Bounded & {
+    kind: 'square';
+}
+
+export type Circle = Region & Fillable & Bounded & {
+    kind: 'circle';
+}
+
+export type Items = Square | Circle;
