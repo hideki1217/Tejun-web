@@ -12,7 +12,7 @@ function App() {
     e.stopPropagation();
 
     setFocusedIndex(index);
-    if (!isPicked) setIsPicked(true);
+    setIsPicked(true);
   };
   const onMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
     if (isPicked) {
@@ -34,7 +34,7 @@ function App() {
       setItems([...items]);
 
       setIsPicked(false);
-    } else if (focusedIndex != null) {
+  } else if (focusedIndex != null) {
       setFocusedIndex(undefined);
     }
   };
