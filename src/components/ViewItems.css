@@ -2,7 +2,7 @@
     position: absolute;
     --delete-button-size: 20px;
 
-    .item {
+    .item-box {
         position: absolute;
     }
 
@@ -16,7 +16,8 @@
         z-index: 1;
 
         border-radius: 99px;
-        background-color: rgb(113, 113, 113);
+        background-color: black;
+        box-shadow: 0px 0px 5px gray;
 
         display: flex;
         align-items: center;
@@ -24,7 +25,7 @@
     }
 
     .delete-button:hover {
-        background-color: rgb(31, 31, 31);
+        background-color: #151515;
     }
 
     .item-border {
