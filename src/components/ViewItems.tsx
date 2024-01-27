@@ -1,5 +1,5 @@
 import DeleteIcon from './DeleteIcon';
-import { Circle, Square } from '../domain/entities';
+import { Circle, Square, Text } from '../domain/entities';
 import './ViewItems.css'
 import { Region } from '../domain/math';
 
@@ -72,6 +72,22 @@ export const CircleView: React.FC<ViewBaseProps<Circle>> = ({ width, height, lef
                 }}
                 onMouseDown={onMouseDown}
             />
+        </Frame>
+    );
+};
+
+export const TextView: React.FC<ViewBaseProps<Text>> = ({ content, fontSize=12, fontColor='black', width, height, left, top, fill, border, onMouseDown, onDelete, isFocused = false }) => {
+    return (
+        <Frame width={width} height={height} left={left} top={top} onDelete={onDelete} isFocused={isFocused}>
+            <div className="item text"
+                style={{
+                    width: `${width}px`,
+                    height: `${height}px`,
+                    background: fill ?? undefined,
+                    border: border ?? undefined
+                }}
+                onMouseDown={onMouseDown}
+            ><span style={{fontSize: fontSize, color: fontColor}}>{content}</span></div>
         </Frame>
     );
 };

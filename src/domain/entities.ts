@@ -16,4 +16,12 @@ export type Circle = Region & Fillable & Bounded & {
     kind: 'circle';
 }
 
-export type Items = Square | Circle;
+export type Text = Region & Fillable & Bounded & {
+    kind: 'text',
+
+    content: string,
+    fontSize?: number,
+    fontColor?: string,
+}
+
+export type Items = Square | Circle | Text;
