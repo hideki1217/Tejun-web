@@ -22,9 +22,10 @@ function App() {
     textDialogRef.current!.close()
   }
 
+  const [enableCockpit, setEnableCockpit] = useState(false);
   const [itemColorHsl, setItemColorHsl] = useState(0);
   const itemColor = `hsl(${itemColorHsl}, 80%, 60%)`
-  const [ignoreKeyDown, setIgnoreKeyDown] = useState(false);
+  const [disableKeyDown, setDisableKeyDown] = useState(false);
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -107,30 +108,29 @@ function App() {
     setItems([...items, item]);
   }
   const onKeyDown = useCallback((e: KeyboardEvent) => {
-    if (!ignoreKeyDown) {
-      const key = e.code;
-      if (key === 'ArrowUp') {
-        setItemColorHsl((itemColorHsl + 90) % 360);
-      }
-      if (key === 'ArrowDown') {
-        setItemColorHsl(((itemColorHsl - 90) + 360) % 360);
-      }
-      if (key === 'ArrowLeft') {
-        setItemColorHsl(((itemColorHsl - 10) + 360) % 360);
-      }
-      if (key === 'ArrowRight') {
-        setItemColorHsl((itemColorHsl + 10) % 360);
-      }
-
-      setIgnoreKeyDown(true);
-      setTimeout(() => {
-        setIgnoreKeyDown(false);
-      }, 100);
+    const key = e.code;
+    if (key === 'ArrowUp') {
+      setItemColorHsl((itemColorHsl) => (itemColorHsl + 90) % 360);
     }
-  }, [itemColorHsl, ignoreKeyDown]);
+    if (key === 'ArrowDown') {
+      setItemColorHsl((itemColorHsl) => ((itemColorHsl - 90) + 360) % 360);
+    }
+    if (key === 'ArrowLeft') {
+      setItemColorHsl((itemColorHsl) => ((itemColorHsl - 10) + 360) % 360);
+    }
+    if (key === 'ArrowRight') {
+      setItemColorHsl((itemColorHsl) => (itemColorHsl + 10) % 360);
+    }
+
+    setDisableKeyDown(true);
+    setTimeout(() => {
+      setDisableKeyDown(false);
+    }, 200);
+  }, []);
   useEffect(() => {
-    document.addEventListener("keydown", onKeyDown, false);
-  }, [onKeyDown])
+    if (!disableKeyDown && enableCockpit) document.addEventListener("keydown", onKeyDown, true);
+    else document.removeEventListener("keydown", onKeyDown, true);
+  }, [onKeyDown, disableKeyDown, enableCockpit])
 
   return (
     <>
@@ -186,27 +186,27 @@ function App() {
           <div style={{ height: '5px' }} />
           <div className='add-item start' onClick={() => {
             const cockpit = document.querySelector(".cockpit");
-            console.log(cockpit);
             cockpit?.classList.toggle("show");
+            setEnableCockpit(true);
           }}>
-            <StartIcon size={20}/>
+            <StartIcon size={20} />
           </div>
         </div>
       </div>
       <div className="cockpit">
         <div className='tool-bar'>
           <div className='add-item pause' onClick={() => {
-              const cockpit = document.querySelector(".cockpit");
-              console.log(cockpit);
-              cockpit?.classList.toggle("show");
-            }} style={{margin: '2px', background: 'inherit'}}>
-              <PauseIcon size={20}/>
+            const cockpit = document.querySelector(".cockpit");
+            cockpit?.classList.toggle("show");
+            setEnableCockpit(false);
+          }} style={{ margin: '2px', background: 'inherit' }}>
+            <PauseIcon size={20} />
           </div>
         </div>
         <div className='slide-container'>
-            <div className='slide-item' style={{background: itemColor}}>
-              {itemColor}
-            </div>
+          <div className='slide-item' style={{ background: itemColor }}>
+            {itemColor}
+          </div>
         </div>
       </div>
     </>
