@@ -2,12 +2,14 @@ import { useRef, useState } from 'react'
 import './App.css'
 import { Items, Square, Circle, Text } from './domain/entities';
 import { CircleView, SquareView, TextView } from './components/ViewItems';
+import StartIcon from './components/StartIcon';
+import PauseIcon from './components/PauseIcon';
 
 function App() {
   const [items, setItems] = useState<Items[]>([])
   const [focusedIndex, setFocusedIndex] = useState<number>();
   const [isPicked, setIsPicked] = useState<boolean>(false);
-  
+
   const textDialogRef = useRef<HTMLDialogElement>(null);
   const textInputRef = useRef<HTMLInputElement>(null);
   const textSizeRef = useRef<HTMLInputElement>(null);
@@ -46,7 +48,7 @@ function App() {
       setItems([...items]);
 
       setIsPicked(false);
-  } else if (focusedIndex != null) {
+    } else if (focusedIndex != null) {
       setFocusedIndex(undefined);
     }
   };
@@ -136,8 +138,8 @@ function App() {
           <div style={{ height: '5px' }} />
           <dialog ref={textDialogRef}>
             <p>ダイアログです。</p>
-            <p><input type='text' ref={textInputRef}/></p>
-            <p><input type='number' ref={textSizeRef}/></p>
+            <p><input type='text' ref={textInputRef} /></p>
+            <p><input type='number' ref={textSizeRef} /></p>
             <p>
               <button onClick={() => {
                 onAddItem("text");
@@ -149,10 +151,30 @@ function App() {
                 キャンセル
               </button>
             </p>
-            
+
           </dialog>
           <div className='add-item text' onClick={textDialogOpenHandler}>T</div>
+          <div style={{ height: '5px' }} />
+          <div className='add-item start' onClick={() => {
+            const cockpit = document.querySelector(".cockpit");
+            console.log(cockpit);
+            cockpit?.classList.toggle("show");
+          }}>
+            <StartIcon size={20}/>
+          </div>
         </div>
+      </div>
+      <div className="cockpit">
+        <div className='tool-bar'>
+          <div className='add-item pause' onClick={() => {
+              const cockpit = document.querySelector(".cockpit");
+              console.log(cockpit);
+              cockpit?.classList.toggle("show");
+            }} style={{margin: '2px', background: 'inherit'}}>
+              <PauseIcon size={20}/>
+          </div>
+        </div>
+        
       </div>
     </>
   )
