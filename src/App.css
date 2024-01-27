@@ -107,3 +107,18 @@
   display: flex;
   justify-content: center;
 }
+
+.cockpit .slide-container {
+  flex: 1;
+  position: relative;
+}
+
+.slide-item {
+  position: absolute;
+  border: solid black;
+  width: 200px;
+  height: 200px;
+  top: calc(50% - 100px);
+  left: calc(50% - 100px);
+  transition-duration: 100ms;
+}

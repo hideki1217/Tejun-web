@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import './App.css'
 import { Items, Square, Circle, Text } from './domain/entities';
 import { CircleView, SquareView, TextView } from './components/ViewItems';
@@ -21,6 +21,10 @@ function App() {
   const textDialogCloseHandler = () => {
     textDialogRef.current!.close()
   }
+
+  const [itemColorHsl, setItemColorHsl] = useState(0);
+  const itemColor = `hsl(${itemColorHsl}, 80%, 60%)`
+  const [ignoreKeyDown, setIgnoreKeyDown] = useState(false);
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -102,6 +106,31 @@ function App() {
     const item = createRandomItem(itemName)!;
     setItems([...items, item]);
   }
+  const onKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!ignoreKeyDown) {
+      const key = e.code;
+      if (key === 'ArrowUp') {
+        setItemColorHsl((itemColorHsl + 90) % 360);
+      }
+      if (key === 'ArrowDown') {
+        setItemColorHsl(((itemColorHsl - 90) + 360) % 360);
+      }
+      if (key === 'ArrowLeft') {
+        setItemColorHsl(((itemColorHsl - 10) + 360) % 360);
+      }
+      if (key === 'ArrowRight') {
+        setItemColorHsl((itemColorHsl + 10) % 360);
+      }
+
+      setIgnoreKeyDown(true);
+      setTimeout(() => {
+        setIgnoreKeyDown(false);
+      }, 100);
+    }
+  }, [itemColorHsl, ignoreKeyDown]);
+  useEffect(() => {
+    document.addEventListener("keydown", onKeyDown, false);
+  }, [onKeyDown])
 
   return (
     <>
@@ -174,7 +203,11 @@ function App() {
               <PauseIcon size={20}/>
           </div>
         </div>
-        
+        <div className='slide-container'>
+            <div className='slide-item' style={{background: itemColor}}>
+              {itemColor}
+            </div>
+        </div>
       </div>
     </>
   )
