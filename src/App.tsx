@@ -4,6 +4,7 @@ import { Items, Square, Circle, Text } from './domain/entities';
 import { CircleView, SquareView, TextView } from './components/ViewItems';
 import StartIcon from './components/StartIcon';
 import PauseIcon from './components/PauseIcon';
+import GestureIcon from './components/GestureIcon';
 
 function App() {
   const [items, setItems] = useState<Items[]>([])
@@ -26,6 +27,7 @@ function App() {
   const [itemColorHsl, setItemColorHsl] = useState(0);
   const itemColor = `hsl(${itemColorHsl}, 80%, 60%)`
   const [disableKeyDown, setDisableKeyDown] = useState(false);
+  const [enableGesture, setEnableGesture] = useState(false);
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -201,6 +203,11 @@ function App() {
             setEnableCockpit(false);
           }} style={{ margin: '2px', background: 'inherit' }}>
             <PauseIcon size={20} />
+          </div>
+          <div className='add-item gesture' onClick={() => {
+            setEnableGesture((enableGesture) => !enableGesture);
+          }} style={{ margin: '2px', background: 'inherit', }}>
+            <GestureIcon size={23} fill={enableGesture ? '#7ef3b6' : undefined} filled={enableGesture}/>
           </div>
         </div>
         <div className='slide-container'>
