@@ -186,9 +186,11 @@ function App() {
           <div className='add-item circle' onClick={() => onAddItem("circle")}>○</div>
           <div style={{ height: '5px' }} />
           <dialog ref={textDialogRef}>
-            <p>ダイアログです。</p>
-            <p><input type='text' ref={textInputRef} /></p>
-            <p><input type='number' ref={textSizeRef} /></p>
+            <p>テキストボックスを追加する</p>
+            <p>
+              <input type='text' ref={textInputRef} placeholder='テキストを入力'/>
+              <input type='number' ref={textSizeRef} style={{width: '40px', marginLeft: '5px'}} placeholder='10'/>
+            </p>
             <p>
               <button onClick={() => {
                 onAddItem("text");
