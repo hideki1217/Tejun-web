@@ -134,6 +134,24 @@ function App() {
     else document.removeEventListener("keydown", onKeyDown, true);
   }, [onKeyDown, disableKeyDown, enableCockpit])
 
+  useEffect(() => {
+    if (enableGesture) {
+      if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
+        console.log("Let's get this party started");
+      }
+  
+      navigator.mediaDevices.getUserMedia({video: {
+        width: 200,
+        height: 150,
+        facingMode: 'user'
+      }}).then((stream) => {
+        const video = document.querySelector(".display-container video") as HTMLVideoElement;
+        video.srcObject = stream;
+        video.play();
+      }).catch(e => console.log(e));
+    }
+  }, [enableGesture])
+
   return (
     <>
       <div className="window" onMouseUp={onMouseUp} onMouseMove={onMouseMove}>
@@ -211,6 +229,13 @@ function App() {
           </div>
         </div>
         <div className='slide-container'>
+          {
+            enableGesture ? (
+              <div className="display-container">
+                <video></video>
+              </div>
+            ) : null
+          }
           <div className='slide-item' style={{ background: itemColor }}>
             {itemColor}
           </div>
