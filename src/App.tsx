@@ -4,7 +4,8 @@ import { Items, Square, Circle, Text } from './domain/entities';
 import { CircleView, SquareView, TextView } from './components/ViewItems';
 import StartIcon from './components/StartIcon';
 import PauseIcon from './components/PauseIcon';
-import GestureIcon from './components/GestureIcon';
+import GestureIcon from './components/GestureIcon'
+import * as faceapi from '@vladmandic/face-api';
 
 function App() {
   const [items, setItems] = useState<Items[]>([])
@@ -140,7 +141,7 @@ function App() {
       width: 200,
       height: 150,
       facingMode: 'user',
-      frameRate: 5
+      frameRate: 3
     }
   }, [])
   useEffect(() => {
@@ -156,27 +157,21 @@ function App() {
         video.srcObject = stream;
         video.play();
 
-        const canvas = document.querySelector(".display-container .raw-canvas") as HTMLCanvasElement;
-        const canvasCtx = canvas.getContext('2d', {willReadFrequently: true})!;
+        const base = document.querySelector(".display-container .base") as HTMLCanvasElement;
+        const baseCtx = base.getContext('2d', { willReadFrequently: true })!;
+
+        const overlay = document.querySelector(".display-container .overlay") as HTMLCanvasElement;
+        const overlayCtx = overlay.getContext('2d')!;
         _canvasUpdate();
 
         function _canvasUpdate() {
-          canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const rawFrame = canvasCtx.getImageData(0, 0, videoConstraints.width, videoConstraints.height);
-
-          const width = videoConstraints.width;
-          const height = videoConstraints.height;
-          for (let i = 0; i < width * height; i++) {
-            const r = rawFrame.data[i * 4 + 0];
-            const g = rawFrame.data[i * 4 + 1];
-            const b = rawFrame.data[i * 4 + 2];
-            const mean = Math.floor((r + g + b) / 3);
-            rawFrame.data[i * 4 + 0] = mean;
-            rawFrame.data[i * 4 + 1] = mean;
-            rawFrame.data[i * 4 + 2] = mean;
-            rawFrame.data[i * 4 + 3] = 255;
-          }
-          canvasCtx.putImageData(rawFrame, 0, 0);
+          baseCtx.drawImage(video, 0, 0, base.width, base.height);
+          faceapi.detectSingleFace(base, new faceapi.TinyFaceDetectorOptions()).run().then((detection) => {
+            overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+            if (detection != undefined) {
+              faceapi.draw.drawDetections(overlay, detection);
+            }
+          });
 
           requestAnimationFrame(_canvasUpdate);
         }
@@ -272,8 +267,13 @@ function App() {
           {
             enableGesture ? (
               <div className="display-container">
-                <video className='display raw-video' style={{display: 'none'}}></video>
-                <canvas className='display raw-canvas' width={videoConstraints.width} height={videoConstraints.height}></canvas>
+                <video className='raw-video' style={{ display: 'none' }}></video>
+                <div className='display' style={{width: videoConstraints.width, height: videoConstraints.height}}>
+                  <div className='canvas-wrap'>
+                    <canvas className='base' width={videoConstraints.width} height={videoConstraints.height}></canvas>
+                    <canvas className='overlay' width={videoConstraints.width} height={videoConstraints.height}></canvas>
+                  </div>
+                </div>
               </div>
             ) : null
           }
