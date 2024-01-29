@@ -30,6 +30,7 @@ function App() {
   const [disableKeyDown, setDisableKeyDown] = useState(false);
   const [enableGesture, setEnableGesture] = useState(false);
   const streamRef = useRef<MediaStream>();
+  const canvasDrawCallBackIdRef = useRef<number>();
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -141,7 +142,7 @@ function App() {
       width: 200,
       height: 150,
       facingMode: 'user',
-      frameRate: 3
+      frameRate: 10
     }
   }, [])
   useEffect(() => {
@@ -168,12 +169,12 @@ function App() {
           baseCtx.drawImage(video, 0, 0, base.width, base.height);
           faceapi.detectSingleFace(base, new faceapi.TinyFaceDetectorOptions()).run().then((detection) => {
             overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-            if (detection != undefined) {
+            if (detection) {
               faceapi.draw.drawDetections(overlay, detection);
             }
           });
-
-          requestAnimationFrame(_canvasUpdate);
+          
+          canvasDrawCallBackIdRef.current = requestAnimationFrame(_canvasUpdate);
         }
       }).catch(e => console.log(e));
     } else {
@@ -181,6 +182,10 @@ function App() {
         // Close MediaStream
         streamRef.current.getTracks().forEach((track) => track.stop());
         streamRef.current = undefined;
+      }
+      if (canvasDrawCallBackIdRef.current != undefined) {
+        cancelAnimationFrame(canvasDrawCallBackIdRef.current);
+        canvasDrawCallBackIdRef.current = undefined;
       }
     }
   }, [enableGesture, videoConstraints])
