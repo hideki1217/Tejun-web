@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import './App.css'
 import { Items, Square, Circle, Text } from './domain/entities';
 import { CircleView, SquareView, TextView } from './components/ViewItems';
@@ -28,6 +28,7 @@ function App() {
   const itemColor = `hsl(${itemColorHsl}, 80%, 60%)`
   const [disableKeyDown, setDisableKeyDown] = useState(false);
   const [enableGesture, setEnableGesture] = useState(false);
+  const streamRef = useRef<MediaStream>();
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -134,23 +135,60 @@ function App() {
     else document.removeEventListener("keydown", onKeyDown, true);
   }, [onKeyDown, disableKeyDown, enableCockpit])
 
+  const videoConstraints = useMemo(() => {
+    return {
+      width: 200,
+      height: 150,
+      facingMode: 'user',
+      frameRate: 5
+    }
+  }, [])
   useEffect(() => {
     if (enableGesture) {
       if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
         console.log("Let's get this party started");
       }
-  
-      navigator.mediaDevices.getUserMedia({video: {
-        width: 200,
-        height: 150,
-        facingMode: 'user'
-      }}).then((stream) => {
+
+      navigator.mediaDevices.getUserMedia({ video: videoConstraints }).then((stream) => {
+        streamRef.current = stream;
+
         const video = document.querySelector(".display-container video") as HTMLVideoElement;
         video.srcObject = stream;
         video.play();
+
+        const canvas = document.querySelector(".display-container .raw-canvas") as HTMLCanvasElement;
+        const canvasCtx = canvas.getContext('2d', {willReadFrequently: true})!;
+        _canvasUpdate();
+
+        function _canvasUpdate() {
+          canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          const rawFrame = canvasCtx.getImageData(0, 0, videoConstraints.width, videoConstraints.height);
+
+          const width = videoConstraints.width;
+          const height = videoConstraints.height;
+          for (let i = 0; i < width * height; i++) {
+            const r = rawFrame.data[i * 4 + 0];
+            const g = rawFrame.data[i * 4 + 1];
+            const b = rawFrame.data[i * 4 + 2];
+            const mean = Math.floor((r + g + b) / 3);
+            rawFrame.data[i * 4 + 0] = mean;
+            rawFrame.data[i * 4 + 1] = mean;
+            rawFrame.data[i * 4 + 2] = mean;
+            rawFrame.data[i * 4 + 3] = 255;
+          }
+          canvasCtx.putImageData(rawFrame, 0, 0);
+
+          requestAnimationFrame(_canvasUpdate);
+        }
       }).catch(e => console.log(e));
+    } else {
+      if (streamRef.current) {
+        // Close MediaStream
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = undefined;
+      }
     }
-  }, [enableGesture])
+  }, [enableGesture, videoConstraints])
 
   return (
     <>
@@ -188,8 +226,8 @@ function App() {
           <dialog ref={textDialogRef}>
             <p>テキストボックスを追加する</p>
             <p>
-              <input type='text' ref={textInputRef} placeholder='テキストを入力'/>
-              <input type='number' ref={textSizeRef} style={{width: '40px', marginLeft: '5px'}} placeholder='10'/>
+              <input type='text' ref={textInputRef} placeholder='テキストを入力' />
+              <input type='number' ref={textSizeRef} style={{ width: '40px', marginLeft: '5px' }} placeholder='10' />
             </p>
             <p>
               <button onClick={() => {
@@ -227,14 +265,15 @@ function App() {
           <div className='add-item gesture' onClick={() => {
             setEnableGesture((enableGesture) => !enableGesture);
           }} style={{ margin: '2px', background: 'inherit', }}>
-            <GestureIcon size={23} fill={enableGesture ? '#7ef3b6' : undefined} filled={enableGesture}/>
+            <GestureIcon size={23} fill={enableGesture ? '#7ef3b6' : undefined} filled={enableGesture} />
           </div>
         </div>
         <div className='slide-container'>
           {
             enableGesture ? (
               <div className="display-container">
-                <video></video>
+                <video className='display raw-video' style={{display: 'none'}}></video>
+                <canvas className='display raw-canvas' width={videoConstraints.width} height={videoConstraints.height}></canvas>
               </div>
             ) : null
           }

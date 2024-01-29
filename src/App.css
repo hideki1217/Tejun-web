@@ -125,9 +125,12 @@
 }
 
 .display-container {
-  width: 200px;
-  height: 150px;
-  border: solid gray 5px;
-  margin: 5px;
-  box-shadow: 1px 1px 3px gray;
+  padding: 5px;
+
+  .display {
+    width: 200px;
+    height: 150px;
+    border: solid gray 5px;
+    box-shadow: 1px 1px 3px gray;
+  }
 }
