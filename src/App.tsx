@@ -5,7 +5,10 @@ import { CircleView, SquareView, TextView } from './components/ViewItems';
 import StartIcon from './components/StartIcon';
 import PauseIcon from './components/PauseIcon';
 import GestureIcon from './components/GestureIcon'
-import * as faceapi from '@vladmandic/face-api';
+// import * as faceapi from '@vladmandic/face-api';
+import * as handTrack from 'handtrackjs';
+
+type Prediction = {bbox: Array<number>, label: string, score: string, class: number};
 
 function App() {
   const [items, setItems] = useState<Items[]>([])
@@ -31,6 +34,7 @@ function App() {
   const [enableGesture, setEnableGesture] = useState(false);
   const streamRef = useRef<MediaStream>();
   const canvasDrawCallBackIdRef = useRef<number>();
+  const handDetectorRef = useRef<handTrack.ObjectDetection>();
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -167,13 +171,21 @@ function App() {
 
         function _canvasUpdate() {
           baseCtx.drawImage(video, 0, 0, base.width, base.height);
-          faceapi.detectSingleFace(base, new faceapi.TinyFaceDetectorOptions()).run().then((detection) => {
-            overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-            if (detection) {
-              faceapi.draw.drawDetections(overlay, detection);
-            }
-          });
-          
+
+          if (handDetectorRef.current) {
+            handDetectorRef.current.detect(base).then((predictions: Prediction[]) => {
+              overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+              predictions.forEach((prediction) => {
+                const bbox = prediction.bbox;
+                overlayCtx.strokeRect(bbox[0], bbox[1], bbox[2], bbox[3]);
+              })
+            });
+          } else {
+            handTrack.load({maxNumBoxes: 3}).then((model: handTrack.ObjectDetection) => {
+              handDetectorRef.current = model;
+            })
+          }
+          overlayCtx.save();
           canvasDrawCallBackIdRef.current = requestAnimationFrame(_canvasUpdate);
         }
       }).catch(e => console.log(e));
