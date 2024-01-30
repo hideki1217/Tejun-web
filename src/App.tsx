@@ -34,7 +34,8 @@ function App() {
   const [enableGesture, setEnableGesture] = useState(false);
   const streamRef = useRef<MediaStream>();
   const canvasDrawCallBackIdRef = useRef<number>();
-  const handDetectorRef = useRef<handTrack.ObjectDetection>();
+  const modelRef = useRef<handTrack.ObjectDetection>();
+  const handDetectingRef = useRef<boolean>(false);
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -151,8 +152,8 @@ function App() {
   }, [])
   useEffect(() => {
     if (enableGesture) {
-      if ('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices) {
-        console.log("Let's get this party started");
+      if (!('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices)) {
+        alert("not supported use getUserMedia");
       }
 
       navigator.mediaDevices.getUserMedia({ video: videoConstraints }).then((stream) => {
@@ -172,17 +173,33 @@ function App() {
         function _canvasUpdate() {
           baseCtx.drawImage(video, 0, 0, base.width, base.height);
 
-          if (handDetectorRef.current) {
-            handDetectorRef.current.detect(base).then((predictions: Prediction[]) => {
-              overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-              predictions.forEach((prediction) => {
-                const bbox = prediction.bbox;
-                overlayCtx.strokeRect(bbox[0], bbox[1], bbox[2], bbox[3]);
-              })
-            });
+          if (modelRef.current) {
+            if (!handDetectingRef.current) {
+              handDetectingRef.current = true;
+              modelRef.current.detect(base).then((predictions: Prediction[]) => {
+                overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+
+                predictions = predictions.filter((prediction) => prediction.label == "open");
+                if (predictions.length > 0) {
+                  const prediction = predictions[0];
+
+                  const bbox = prediction.bbox;
+                  overlayCtx.strokeRect(bbox[0], bbox[1], bbox[2], bbox[3]);
+
+                  const centerX = bbox[0] + bbox[2] / 2;
+                  const centerY = bbox[1] + bbox[3] / 2;
+                  overlayCtx.beginPath();
+                  overlayCtx.arc(centerX, centerY, 4, 0, Math.PI * 2);
+                  overlayCtx.fillStyle = "red";
+                  overlayCtx.fill();
+                }
+
+                handDetectingRef.current = false;
+              });
+            }
           } else {
             handTrack.load({ maxNumBoxes: 3 }).then((model: handTrack.ObjectDetection) => {
-              handDetectorRef.current = model;
+              modelRef.current = model;
             })
           }
           canvasDrawCallBackIdRef.current = requestAnimationFrame(_canvasUpdate);
