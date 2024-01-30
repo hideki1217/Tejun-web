@@ -29,7 +29,8 @@ function App() {
 
   const [enableCockpit, setEnableCockpit] = useState(false);
   const [itemColorHsl, setItemColorHsl] = useState(0);
-  const itemColor = `hsl(${itemColorHsl}, 80%, 60%)`
+  const prevItemColorHslRef = useRef<number>(0);
+  const getColor = (hsl: number) => `hsl(${hsl}, 80%, 60%)`;
   const [disableKeyDown, setDisableKeyDown] = useState(false);
   const [enableGesture, setEnableGesture] = useState(false);
   const streamRef = useRef<MediaStream>();
@@ -70,6 +71,66 @@ function App() {
     }
   };
 
+  const controlItem = useCallback((direction: "up" | "down" | "left" | "right") => {
+    const [bottom, top] = document.querySelectorAll(".slide-item");
+
+    if (direction === 'up') {
+      setItemColorHsl((itemColorHsl) => {
+        const next = ((itemColorHsl + 90) + 360) % 360;
+        prevItemColorHslRef.current = itemColorHsl;
+        return next;
+      });
+
+      bottom.classList.remove(bottom.classList.item(1)!);
+      top.classList.remove(top.classList.item(1)!);
+      requestAnimationFrame(() => {
+        top.classList.add("slideinTop");
+        bottom.classList.add("slideoutBottom");
+      });
+    }
+    if (direction === 'down') {
+      setItemColorHsl((itemColorHsl) => {
+        const next = ((itemColorHsl - 90) + 360) % 360;
+        prevItemColorHslRef.current = itemColorHsl;
+        return next;
+      });
+
+      bottom.classList.remove(bottom.classList.item(1)!);
+      top.classList.remove(top.classList.item(1)!);
+      requestAnimationFrame(() => {
+        top.classList.add("slideinBottom");
+        bottom.classList.add("slideoutTop");
+      });
+    }
+    if (direction === 'left') {
+      setItemColorHsl((itemColorHsl) => {
+        const next = ((itemColorHsl - 20) + 360) % 360;
+        prevItemColorHslRef.current = itemColorHsl;
+        return next;
+      });
+
+      bottom.classList.remove(bottom.classList.item(1)!);
+      top.classList.remove(top.classList.item(1)!);
+      requestAnimationFrame(() => {
+        top.classList.add("slideinRight");
+        bottom.classList.add("slideoutLeft");
+      });
+    }
+    if (direction === 'right') {
+      setItemColorHsl((itemColorHsl) => {
+        const next = ((itemColorHsl + 20) + 360) % 360;
+        prevItemColorHslRef.current = itemColorHsl;
+        return next;
+      });
+
+      bottom.classList.remove(bottom.classList.item(1)!);
+      top.classList.remove(top.classList.item(1)!);
+      requestAnimationFrame(() => {
+        top.classList.add("slideinLeft");
+        bottom.classList.add("slideoutRight");
+      });
+    }
+  }, []);
   const uniform = (low: number, high?: number) => {
     if (high == null) {
       high = low;
@@ -122,23 +183,23 @@ function App() {
   const onKeyDown = useCallback((e: KeyboardEvent) => {
     const key = e.code;
     if (key === 'ArrowUp') {
-      setItemColorHsl((itemColorHsl) => (itemColorHsl + 90) % 360);
+      controlItem('up');
     }
     if (key === 'ArrowDown') {
-      setItemColorHsl((itemColorHsl) => ((itemColorHsl - 90) + 360) % 360);
+      controlItem('down');
     }
     if (key === 'ArrowLeft') {
-      setItemColorHsl((itemColorHsl) => ((itemColorHsl - 10) + 360) % 360);
+      controlItem('left');
     }
     if (key === 'ArrowRight') {
-      setItemColorHsl((itemColorHsl) => (itemColorHsl + 10) % 360);
+      controlItem('right');
     }
 
     setDisableKeyDown(true);
     setTimeout(() => {
       setDisableKeyDown(false);
-    }, 200);
-  }, []);
+    }, 1000);
+  }, [controlItem]);
   useEffect(() => {
     if (!disableKeyDown && enableCockpit) document.addEventListener("keydown", onKeyDown, true);
     else document.removeEventListener("keydown", onKeyDown, true);
@@ -228,19 +289,19 @@ function App() {
       setInterval(() => {
         if (handCenterRef.current) {
           if (handCenterRef.current.x < 1 / 5 * videoConstraints.width) {
-            setItemColorHsl((hsl) => (hsl - 10) % 360);
+            controlItem('left');
           } else if (4 / 5 * videoConstraints.width < handCenterRef.current.x) {
-            setItemColorHsl((hsl) => (hsl + 10) % 360);
+            controlItem('right');
           } else if (handCenterRef.current.y < 1 / 5 * videoConstraints.height) {
-            setItemColorHsl((hsl) => (hsl + 90) % 360);
+            controlItem('up');
           } else if (4 / 5 * videoConstraints.height < handCenterRef.current.y) {
-            setItemColorHsl((hsl) => (hsl - 90) % 360);
+            controlItem('down');
           }
         }
       }, 1000);
       handJudgeRunningRef.current = true;
     }
-  }, [videoConstraints]);
+  }, [controlItem, videoConstraints]);
 
   return (
     <>
@@ -334,9 +395,10 @@ function App() {
               </div>
             ) : null
           }
-          <div className='slide-item' style={{ background: itemColor }}>
-            {itemColor}
+          <div className='slide-item tmp' style={{ background: getColor(prevItemColorHslRef.current) }}>
           </div>
+          <div className='slide-item tmp' style={{ background: getColor(itemColorHsl) }}>
+          </div>          
         </div>
       </div>
     </>

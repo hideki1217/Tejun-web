@@ -112,6 +112,7 @@
 .cockpit .slide-container {
   flex: 1;
   position: relative;
+  overflow: hidden;
 }
 
 .slide-item {
@@ -122,6 +123,99 @@
   top: calc(50% - 100px);
   left: calc(50% - 100px);
   transition-duration: 100ms;
+
+}
+
+.slideoutLeft {
+  animation: slideoutLeft 1s forwards;
+}
+@keyframes slideoutLeft {
+  0% {
+    transform: translateX(0px);
+  }
+  100% {
+    transform: translateX(-500px);
+  }
+}
+.slideinLeft {
+  animation: slideinLeft 1s forwards;
+}
+@keyframes slideinLeft {
+  0% {
+    transform: translateX(-500px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
+
+.slideoutRight {
+  animation: slideoutRight 1s forwards;
+}
+@keyframes slideoutRight {
+  0% {
+    transform: translateX(0px);
+  }
+  100% {
+    transform: translateX(500px);
+  }
+}
+.slideinRight {
+  animation: slideinRight 1s forwards;
+}
+@keyframes slideinRight {
+  0% {
+    transform: translateX(500px);
+  }
+  100% {
+    transform: translateX(0px);
+  }
+}
+
+.slideoutBottom {
+  animation: slideoutBottom 1s forwards;
+}
+@keyframes slideoutBottom {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(-500px);
+  }
+}
+.slideinBottom {
+  animation: slideinBottom 1s forwards;
+}
+@keyframes slideinBottom {
+  0% {
+    transform: translateY(-500px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.slideoutTop {
+  animation: slideoutTop 1s forwards;
+}
+@keyframes slideoutTop {
+  0% {
+    transform: translateY(0px);
+  }
+  100% {
+    transform: translateY(500px);
+  }
+}
+.slideinTop {
+  animation: slideinTop 1s forwards;
+}
+@keyframes slideinTop {
+  0% {
+    transform: translateY(500px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
 }
 
 .display-container {
