@@ -8,7 +8,7 @@ import GestureIcon from './components/GestureIcon'
 // import * as faceapi from '@vladmandic/face-api';
 import * as handTrack from 'handtrackjs';
 
-type Prediction = {bbox: Array<number>, label: string, score: string, class: number};
+type Prediction = { bbox: Array<number>, label: string, score: string, class: number };
 
 function App() {
   const [items, setItems] = useState<Items[]>([])
@@ -181,11 +181,10 @@ function App() {
               })
             });
           } else {
-            handTrack.load({maxNumBoxes: 3}).then((model: handTrack.ObjectDetection) => {
+            handTrack.load({ maxNumBoxes: 3 }).then((model: handTrack.ObjectDetection) => {
               handDetectorRef.current = model;
             })
           }
-          overlayCtx.save();
           canvasDrawCallBackIdRef.current = requestAnimationFrame(_canvasUpdate);
         }
       }).catch(e => console.log(e));
@@ -285,7 +284,7 @@ function App() {
             enableGesture ? (
               <div className="display-container">
                 <video className='raw-video' style={{ display: 'none' }}></video>
-                <div className='display' style={{width: videoConstraints.width, height: videoConstraints.height}}>
+                <div className='display' style={{ width: videoConstraints.width, height: videoConstraints.height }}>
                   <div className='canvas-wrap'>
                     <canvas className='base' width={videoConstraints.width} height={videoConstraints.height}></canvas>
                     <canvas className='overlay' width={videoConstraints.width} height={videoConstraints.height}></canvas>
