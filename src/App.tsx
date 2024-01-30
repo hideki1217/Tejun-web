@@ -36,6 +36,8 @@ function App() {
   const canvasDrawCallBackIdRef = useRef<number>();
   const modelRef = useRef<handTrack.ObjectDetection>();
   const handDetectingRef = useRef<boolean>(false);
+  const handCenterRef = useRef<{x: number, y: number} | undefined>(undefined);
+  const handJudgeRunningRef = useRef<boolean>(false);
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -192,6 +194,10 @@ function App() {
                   overlayCtx.arc(centerX, centerY, 4, 0, Math.PI * 2);
                   overlayCtx.fillStyle = "red";
                   overlayCtx.fill();
+
+                  handCenterRef.current = {x: centerX, y: centerY};
+                } else {
+                  handCenterRef.current = undefined;
                 }
 
                 handDetectingRef.current = false;
@@ -217,6 +223,24 @@ function App() {
       }
     }
   }, [enableGesture, videoConstraints])
+  useEffect(() => {
+    if (!handJudgeRunningRef.current) {
+      setInterval(() => {
+        if (handCenterRef.current) {
+          if (handCenterRef.current.x < 1 / 5 * videoConstraints.width) {
+            setItemColorHsl((hsl) => (hsl - 10) % 360);
+          } else if (4 / 5 * videoConstraints.width < handCenterRef.current.x) {
+            setItemColorHsl((hsl) => (hsl + 10) % 360);
+          } else if (handCenterRef.current.y < 1 / 5 * videoConstraints.height) {
+            setItemColorHsl((hsl) => (hsl + 90) % 360);
+          } else if (4 / 5 * videoConstraints.height < handCenterRef.current.y) {
+            setItemColorHsl((hsl) => (hsl - 90) % 360);
+          }
+        }
+      }, 1000);
+      handJudgeRunningRef.current = true;
+    }
+  }, [videoConstraints]);
 
   return (
     <>
