@@ -9,6 +9,7 @@ import GestureIcon from './components/GestureIcon'
 import * as handTrack from 'handtrackjs';
 
 type Prediction = { bbox: Array<number>, label: string, score: string, class: number };
+type Point = { x: number, y: number, t: number }
 
 function App() {
   const [items, setItems] = useState<Items[]>([])
@@ -37,8 +38,8 @@ function App() {
   const canvasDrawCallBackIdRef = useRef<number>();
   const modelRef = useRef<handTrack.ObjectDetection>();
   const handDetectingRef = useRef<boolean>(false);
-  const handCenterRef = useRef<{x: number, y: number} | undefined>(undefined);
-  const handJudgeRunningRef = useRef<boolean>(false);
+  const handCenterRef = useRef<Point | undefined>(undefined);
+  const handOrbitRef = useRef<Array<Point>>([]);
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -242,8 +243,10 @@ function App() {
               modelRef.current.detect(base).then((predictions: Prediction[]) => {
                 overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
 
-                predictions = predictions.filter((prediction) => prediction.label == "open");
-                if (predictions.length > 0) {
+                const isFaceDetected = (predictions.filter((prediction) => prediction.label == "face").length > 0);
+                const isOpenHandDetected = (predictions.filter((prediction) => prediction.label == "open").length > 0);
+                if (isFaceDetected && isOpenHandDetected) {
+                  predictions = predictions.filter((prediction) => prediction.label == "open");
                   const prediction = predictions[0];
 
                   const bbox = prediction.bbox;
@@ -255,8 +258,34 @@ function App() {
                   overlayCtx.arc(centerX, centerY, 4, 0, Math.PI * 2);
                   overlayCtx.fillStyle = "red";
                   overlayCtx.fill();
-
-                  handCenterRef.current = {x: centerX, y: centerY};
+                  
+                  const current = handCenterRef.current = { x: centerX, y: centerY, t: Date.now() };
+                  handOrbitRef.current.push(handCenterRef.current);
+                  if (handOrbitRef.current.length > 10) {
+                    const origin = handOrbitRef.current.shift()!;
+                    const dtS = (current.t - origin.t) / 1000;
+                    if (dtS < 1) {
+                      const velocity = {
+                        x: (current.x - origin.x) / dtS,
+                        y: (current.y - origin.y) / dtS,
+                        t: (current.t + origin.t) / 2
+                      };
+                      console.log(velocity);
+                      if (velocity.x < -50) {
+                        controlItem('left');
+                        handOrbitRef.current = [];
+                      } else if (50 < velocity.x) {
+                        controlItem('right');
+                        handOrbitRef.current = [];
+                      } else if (velocity.y < -50) {
+                        controlItem('up');
+                        handOrbitRef.current = [];
+                      } else if (50 < velocity.y) {
+                        controlItem('down');
+                        handOrbitRef.current = [];
+                      }
+                    }
+                  }
                 } else {
                   handCenterRef.current = undefined;
                 }
@@ -283,25 +312,7 @@ function App() {
         canvasDrawCallBackIdRef.current = undefined;
       }
     }
-  }, [enableGesture, videoConstraints])
-  useEffect(() => {
-    if (!handJudgeRunningRef.current) {
-      setInterval(() => {
-        if (handCenterRef.current) {
-          if (handCenterRef.current.x < 1 / 5 * videoConstraints.width) {
-            controlItem('left');
-          } else if (4 / 5 * videoConstraints.width < handCenterRef.current.x) {
-            controlItem('right');
-          } else if (handCenterRef.current.y < 1 / 5 * videoConstraints.height) {
-            controlItem('up');
-          } else if (4 / 5 * videoConstraints.height < handCenterRef.current.y) {
-            controlItem('down');
-          }
-        }
-      }, 1000);
-      handJudgeRunningRef.current = true;
-    }
-  }, [controlItem, videoConstraints]);
+  }, [controlItem, enableGesture, videoConstraints])
 
   return (
     <>
@@ -398,7 +409,7 @@ function App() {
           <div className='slide-item tmp' style={{ background: getColor(prevItemColorHslRef.current) }}>
           </div>
           <div className='slide-item tmp' style={{ background: getColor(itemColorHsl) }}>
-          </div>          
+          </div>
         </div>
       </div>
     </>
