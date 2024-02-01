@@ -5,11 +5,22 @@ import { CircleView, SquareView, TextView } from './components/ViewItems';
 import StartIcon from './components/StartIcon';
 import PauseIcon from './components/PauseIcon';
 import GestureIcon from './components/GestureIcon'
-// import * as faceapi from '@vladmandic/face-api';
-import * as handTrack from 'handtrackjs';
+import { FilesetResolver, HandLandmarker, DrawingUtils } from '@mediapipe/tasks-vision';
 
-type Prediction = { bbox: Array<number>, label: string, score: string, class: number };
-type Point = { x: number, y: number, t: number }
+const vision = await FilesetResolver.forVisionTasks(
+  // path/to/wasm/root
+  "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@latest/wasm"
+);
+const handLandmarker = await HandLandmarker.createFromOptions(
+  vision,
+  {
+    runningMode: "VIDEO",
+    baseOptions: {
+      modelAssetPath: "models/hand_landmarker.task",
+      delegate: "GPU"
+    },
+    numHands: 2
+  });
 
 function App() {
   const [items, setItems] = useState<Items[]>([])
@@ -36,10 +47,6 @@ function App() {
   const [enableGesture, setEnableGesture] = useState(false);
   const streamRef = useRef<MediaStream>();
   const canvasDrawCallBackIdRef = useRef<number>();
-  const modelRef = useRef<handTrack.ObjectDetection>();
-  const handDetectingRef = useRef<boolean>(false);
-  const handCenterRef = useRef<Point | undefined>(undefined);
-  const handOrbitRef = useRef<Array<Point>>([]);
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -219,88 +226,49 @@ function App() {
       if (!('mediaDevices' in navigator && 'getUserMedia' in navigator.mediaDevices)) {
         alert("not supported use getUserMedia");
       }
+      const video = document.querySelector(".display-container video") as HTMLVideoElement;
+      const base = document.querySelector(".display-container .base") as HTMLCanvasElement;
+      const overlay = document.querySelector(".display-container .overlay") as HTMLCanvasElement;
 
       navigator.mediaDevices.getUserMedia({ video: videoConstraints }).then((stream) => {
         streamRef.current = stream;
 
-        const video = document.querySelector(".display-container video") as HTMLVideoElement;
         video.srcObject = stream;
         video.play();
-
-        const base = document.querySelector(".display-container .base") as HTMLCanvasElement;
-        const baseCtx = base.getContext('2d', { willReadFrequently: true })!;
-
-        const overlay = document.querySelector(".display-container .overlay") as HTMLCanvasElement;
-        const overlayCtx = overlay.getContext('2d')!;
-        _canvasUpdate();
-
-        function _canvasUpdate() {
-          baseCtx.drawImage(video, 0, 0, base.width, base.height);
-
-          if (modelRef.current) {
-            if (!handDetectingRef.current) {
-              handDetectingRef.current = true;
-              modelRef.current.detect(base).then((predictions: Prediction[]) => {
-                overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
-
-                const isFaceDetected = (predictions.filter((prediction) => prediction.label == "face").length > 0);
-                const isOpenHandDetected = (predictions.filter((prediction) => prediction.label == "open").length > 0);
-                if (isFaceDetected && isOpenHandDetected) {
-                  predictions = predictions.filter((prediction) => prediction.label == "open");
-                  const prediction = predictions[0];
-
-                  const bbox = prediction.bbox;
-                  overlayCtx.strokeRect(bbox[0], bbox[1], bbox[2], bbox[3]);
-
-                  const centerX = bbox[0] + bbox[2] / 2;
-                  const centerY = bbox[1] + bbox[3] / 2;
-                  overlayCtx.beginPath();
-                  overlayCtx.arc(centerX, centerY, 4, 0, Math.PI * 2);
-                  overlayCtx.fillStyle = "red";
-                  overlayCtx.fill();
-                  
-                  const current = handCenterRef.current = { x: centerX, y: centerY, t: Date.now() };
-                  handOrbitRef.current.push(handCenterRef.current);
-                  if (handOrbitRef.current.length > 10) {
-                    const origin = handOrbitRef.current.shift()!;
-                    const dtS = (current.t - origin.t) / 1000;
-                    if (dtS < 1) {
-                      const velocity = {
-                        x: (current.x - origin.x) / dtS,
-                        y: (current.y - origin.y) / dtS,
-                        t: (current.t + origin.t) / 2
-                      };
-                      console.log(velocity);
-                      if (velocity.x < -50) {
-                        controlItem('left');
-                        handOrbitRef.current = [];
-                      } else if (50 < velocity.x) {
-                        controlItem('right');
-                        handOrbitRef.current = [];
-                      } else if (velocity.y < -50) {
-                        controlItem('up');
-                        handOrbitRef.current = [];
-                      } else if (50 < velocity.y) {
-                        controlItem('down');
-                        handOrbitRef.current = [];
-                      }
-                    }
-                  }
-                } else {
-                  handCenterRef.current = undefined;
-                }
-
-                handDetectingRef.current = false;
-              });
-            }
-          } else {
-            handTrack.load({ maxNumBoxes: 3 }).then((model: handTrack.ObjectDetection) => {
-              modelRef.current = model;
-            })
-          }
-          canvasDrawCallBackIdRef.current = requestAnimationFrame(_canvasUpdate);
-        }
       }).catch(e => console.log(e));
+
+      let lastVideoTime = -1;
+      const baseCtx = base.getContext('2d', { willReadFrequently: true })!;
+      const overlayCtx = overlay.getContext('2d')!;
+      const drawUtils = new DrawingUtils(overlayCtx);
+      const _renderLoop = () => {
+        if (video.currentTime > 0 && video.currentTime !== lastVideoTime) {
+          const detections = handLandmarker.detectForVideo(video, video.currentTime * 1000);
+
+          baseCtx.drawImage(video, 0, 0, base.width, base.height);
+          overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
+          for (let i = 0; i < detections.handedness.length; i++) {
+            const isLeft = detections.handedness[i][0].categoryName == "Left";
+            drawUtils.drawLandmarks(
+              detections.landmarks[i], 
+              { 
+                color: getColor((isLeft ? 1 : -1) * 90), 
+                radius: 2,
+              });
+            drawUtils.drawConnectors(
+              detections.landmarks[i],
+              HandLandmarker.HAND_CONNECTIONS,
+              {
+                lineWidth: 1,
+              }
+            )
+          }
+
+          lastVideoTime = video.currentTime;
+        }
+        canvasDrawCallBackIdRef.current = requestAnimationFrame(_renderLoop);
+      };
+      _renderLoop();
     } else {
       if (streamRef.current) {
         // Close MediaStream
@@ -396,7 +364,7 @@ function App() {
           {
             enableGesture ? (
               <div className="display-container">
-                <video className='raw-video' style={{ display: 'none' }}></video>
+                <video className='raw-video' width={videoConstraints.width} height={videoConstraints.height} style={{ display: "none" }}></video>
                 <div className='display' style={{ width: videoConstraints.width, height: videoConstraints.height }}>
                   <div className='canvas-wrap'>
                     <canvas className='base' width={videoConstraints.width} height={videoConstraints.height}></canvas>
