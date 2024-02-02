@@ -214,11 +214,12 @@ function App() {
   }, [onKeyDown, disableKeyDown, enableCockpit])
 
   const videoConstraints = useMemo(() => {
+    const s = 60;
     return {
-      width: 200,
-      height: 150,
+      width: s * 4,
+      height: s * 3,
       facingMode: 'user',
-      frameRate: 10
+      frameRate: 20
     }
   }, [])
   useEffect(() => {
@@ -242,8 +243,9 @@ function App() {
       const overlayCtx = overlay.getContext('2d')!;
       const drawUtils = new DrawingUtils(overlayCtx);
       const _renderLoop = () => {
+        const timeMs = performance.now();
         if (video.currentTime > 0 && video.currentTime !== lastVideoTime) {
-          const detections = handLandmarker.detectForVideo(video, video.currentTime * 1000);
+          const detections = handLandmarker.detectForVideo(video, timeMs);
 
           baseCtx.drawImage(video, 0, 0, base.width, base.height);
           overlayCtx.clearRect(0, 0, overlay.width, overlay.height);
