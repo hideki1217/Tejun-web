@@ -123,97 +123,114 @@
   top: calc(50% - 100px);
   left: calc(50% - 100px);
   transition-duration: 100ms;
-
+  animation-duration: 1000ms;
+  animation-fill-mode: forwards;
 }
 
 .slideoutLeft {
-  animation: slideoutLeft 1s forwards;
+  animation-name: slideoutLeft;
 }
 @keyframes slideoutLeft {
   0% {
+    opacity: 1;
     transform: translateX(0px);
   }
   100% {
+    opacity: 0;
     transform: translateX(-500px);
   }
 }
 .slideinLeft {
-  animation: slideinLeft 1s forwards;
+  animation-name: slideinLeft;
 }
 @keyframes slideinLeft {
   0% {
+    opacity: 0;
     transform: translateX(-500px);
   }
   100% {
+    opacity: 1;
     transform: translateX(0px);
   }
 }
 
 .slideoutRight {
-  animation: slideoutRight 1s forwards;
+  animation-name: slideoutRight;
 }
 @keyframes slideoutRight {
   0% {
+    opacity: 1;
     transform: translateX(0px);
   }
   100% {
+    opacity: 0;
     transform: translateX(500px);
   }
 }
 .slideinRight {
-  animation: slideinRight 1s forwards;
+  animation-name: slideinRight;
 }
 @keyframes slideinRight {
   0% {
+    opacity: 0;
     transform: translateX(500px);
   }
   100% {
+    opacity: 1;
     transform: translateX(0px);
   }
 }
 
 .slideoutBottom {
-  animation: slideoutBottom 1s forwards;
+  animation-name: slideoutBottom;
 }
 @keyframes slideoutBottom {
   0% {
+    opacity: 1;
     transform: translateY(0px);
   }
   100% {
+    opacity: 0;
     transform: translateY(-500px);
   }
 }
 .slideinBottom {
-  animation: slideinBottom 1s forwards;
+  animation-name: slideinBottom;
 }
 @keyframes slideinBottom {
   0% {
+    opacity: 0;
     transform: translateY(-500px);
   }
   100% {
+    opacity: 1;
     transform: translateY(0px);
   }
 }
 
 .slideoutTop {
-  animation: slideoutTop 1s forwards;
+  animation-name: slideoutTop;
 }
 @keyframes slideoutTop {
   0% {
+    opacity: 1;
     transform: translateY(0px);
   }
   100% {
+    opacity: 0;
     transform: translateY(500px);
   }
 }
 .slideinTop {
-  animation: slideinTop 1s forwards;
+  animation-name: slideinTop;
 }
 @keyframes slideinTop {
   0% {
+    opacity: 0;
     transform: translateY(500px);
   }
   100% {
+    opacity: 1;
     transform: translateY(0px);
   }
 }
