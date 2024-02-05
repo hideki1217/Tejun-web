@@ -47,6 +47,8 @@ function App() {
   const [enableGesture, setEnableGesture] = useState(false);
   const streamRef = useRef<MediaStream>();
   const canvasDrawCallBackIdRef = useRef<number>();
+  const [pinchedLoc, setPinchedLoc] = useState<{ x: number, y: number, z: number } | undefined>();
+  const pinchCountRef = useRef<number>(0);
 
   const onItemFocused = (index: number) => (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
@@ -228,8 +230,6 @@ function App() {
         alert("not supported use getUserMedia");
       }
       const video = document.querySelector(".display-container video") as HTMLVideoElement;
-      const base = document.querySelector(".display-container .base") as HTMLCanvasElement;
-      const overlay = document.querySelector(".display-container .overlay") as HTMLCanvasElement;
 
       navigator.mediaDevices.getUserMedia({ video: videoConstraints }).then((stream) => {
         streamRef.current = stream;
@@ -237,6 +237,28 @@ function App() {
         video.srcObject = stream;
         video.play();
       }).catch(e => console.log(e));
+    } else {
+      if (streamRef.current) {
+        // Close MediaStream
+        streamRef.current.getTracks().forEach((track) => track.stop());
+        streamRef.current = undefined;
+      }
+      if (canvasDrawCallBackIdRef.current != undefined) {
+        cancelAnimationFrame(canvasDrawCallBackIdRef.current);
+        canvasDrawCallBackIdRef.current = undefined;
+      }
+    }
+  }, [enableGesture, videoConstraints]);
+  useEffect(() => {
+    if (enableGesture) {
+      if (canvasDrawCallBackIdRef.current != undefined) {
+        cancelAnimationFrame(canvasDrawCallBackIdRef.current);
+        canvasDrawCallBackIdRef.current = undefined;
+      }
+
+      const video = document.querySelector(".display-container video") as HTMLVideoElement;
+      const base = document.querySelector(".display-container .base") as HTMLCanvasElement;
+      const overlay = document.querySelector(".display-container .overlay") as HTMLCanvasElement;
 
       let lastVideoTime = -1;
       const baseCtx = base.getContext('2d', { willReadFrequently: true })!;
@@ -252,9 +274,9 @@ function App() {
           for (let i = 0; i < detections.handedness.length; i++) {
             const isLeft = detections.handedness[i][0].categoryName == "Left";
             drawUtils.drawLandmarks(
-              detections.landmarks[i], 
-              { 
-                color: getColor((isLeft ? 1 : -1) * 90), 
+              detections.landmarks[i],
+              {
+                color: getColor((isLeft ? 1 : -1) * 90),
                 radius: 2,
               });
             drawUtils.drawConnectors(
@@ -263,7 +285,41 @@ function App() {
               {
                 lineWidth: 1,
               }
-            )
+            );
+
+            if (!isLeft) {
+              const landmarks = detections.landmarks[i];
+
+              const thumbTip = landmarks[4];
+              const indexFingerTip = landmarks[8];
+              const calcDistance = (lhs: { x: number, y: number }, rhs: { x: number, y: number }) => {
+                return Math.sqrt((lhs.x - rhs.x) ** 2 + (lhs.y - rhs.y) ** 2)
+              }
+              const distanceM = calcDistance(thumbTip, indexFingerTip);
+              if (distanceM < 0.1) {
+                if (pinchedLoc == undefined) {
+                  if (pinchCountRef.current > 3) {
+                    setPinchedLoc(landmarks[4]);
+                    pinchCountRef.current = 0;
+                  } else {
+                    pinchCountRef.current++;
+                  }
+                }
+              } else {
+                if (pinchedLoc) {
+                  if (pinchCountRef.current > 3) {
+                    if (landmarks[4].x - pinchedLoc.x > 0.1) controlItem("left");
+                    else if (landmarks[4].x - pinchedLoc.x < -0.1) controlItem("right");
+                    else if (landmarks[4].y - pinchedLoc.y > 0.1) controlItem("down");
+                    else if (landmarks[4].y - pinchedLoc.y < -0.1) controlItem("up");
+                    setPinchedLoc(undefined);
+                    pinchCountRef.current = 0;
+                  } else {
+                    pinchCountRef.current++;
+                  }
+                }
+              }
+            }
           }
 
           lastVideoTime = video.currentTime;
@@ -271,18 +327,8 @@ function App() {
         canvasDrawCallBackIdRef.current = requestAnimationFrame(_renderLoop);
       };
       _renderLoop();
-    } else {
-      if (streamRef.current) {
-        // Close MediaStream
-        streamRef.current.getTracks().forEach((track) => track.stop());
-        streamRef.current = undefined;
-      }
-      if (canvasDrawCallBackIdRef.current != undefined) {
-        cancelAnimationFrame(canvasDrawCallBackIdRef.current);
-        canvasDrawCallBackIdRef.current = undefined;
-      }
     }
-  }, [controlItem, enableGesture, videoConstraints])
+  }, [controlItem, enableGesture, pinchedLoc]);
 
   return (
     <>
@@ -365,7 +411,7 @@ function App() {
         <div className='slide-container'>
           {
             enableGesture ? (
-              <div className="display-container">
+              <div className="display-container" >
                 <video className='raw-video' width={videoConstraints.width} height={videoConstraints.height} style={{ display: "none" }}></video>
                 <div className='display' style={{ width: videoConstraints.width, height: videoConstraints.height }}>
                   <div className='canvas-wrap'>
@@ -374,6 +420,11 @@ function App() {
                   </div>
                 </div>
               </div>
+            ) : null
+          }
+          {
+            pinchedLoc ? (
+              <div style={{ position: 'absolute', right: '0px', top: '0px', width: '100px', height: '100px' }} >{pinchCountRef.current}</div>
             ) : null
           }
           <div className='slide-item tmp' style={{ background: getColor(prevItemColorHslRef.current) }}>
